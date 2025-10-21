@@ -161,8 +161,14 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
       })),
   }
 
-  const width = graph.offsetWidth
-  const height = Math.max(graph.offsetHeight, 250)
+  let width = graph.offsetWidth
+  let height = Math.max(graph.offsetHeight, 250)
+
+  // Listen for resize events
+  graph.addEventListener("resize", () => {
+    width = graph.offsetWidth
+    height = Math.max(graph.offsetHeight, 250)
+  })
 
   // we virtualize the simulation and use pixi to actually render it
   const simulation: Simulation<NodeData, LinkData> = forceSimulation<NodeData>(graphData.nodes)
@@ -372,6 +378,14 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     eventMode: "static",
   })
   graph.appendChild(app.canvas)
+
+  // Update the resize event handler to also resize the PixiJS app
+  graph.removeEventListener("resize", () => {})
+  graph.addEventListener("resize", () => {
+    width = graph.offsetWidth
+    height = Math.max(graph.offsetHeight, 250)
+    app.renderer.resize(width, height)
+  })
 
   const stage = app.stage
   stage.interactive = false
@@ -587,12 +601,57 @@ document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
   const slug = e.detail.url
   addToVisited(simplifySlug(slug))
 
+  // Add resize functionality
+  function initializeResizeHandles() {
+    const resizeHandles = document.getElementsByClassName("resize-handle")
+    for (const handle of resizeHandles) {
+      let isResizing = false
+      let startY = 0
+      let startHeight = 0
+
+      handle.addEventListener("mousedown", (e) => {
+        isResizing = true
+        startY = e.clientY
+        const graphOuter = handle.parentElement as HTMLElement
+        startHeight = graphOuter.offsetHeight
+        document.body.style.cursor = "ns-resize"
+        document.body.style.userSelect = "none"
+        e.preventDefault()
+      })
+
+      document.addEventListener("mousemove", (e) => {
+        if (!isResizing) return
+        
+        const deltaY = e.clientY - startY
+        const newHeight = Math.max(150, Math.min(window.innerHeight * 0.8, startHeight + deltaY))
+        const graphOuter = handle.parentElement as HTMLElement
+        graphOuter.style.height = `${newHeight}px`
+        
+        // Trigger graph re-render with new dimensions
+        const graphContainer = graphOuter.querySelector(".graph-container") as HTMLElement
+        if (graphContainer) {
+          // Dispatch a custom event to trigger graph resize
+          graphContainer.dispatchEvent(new CustomEvent("resize"))
+        }
+      })
+
+      document.addEventListener("mouseup", () => {
+        if (isResizing) {
+          isResizing = false
+          document.body.style.cursor = ""
+          document.body.style.userSelect = ""
+        }
+      })
+    }
+  }
+
   async function renderLocalGraph() {
     cleanupLocalGraphs()
     const localGraphContainers = document.getElementsByClassName("graph-container")
     for (const container of localGraphContainers) {
       localGraphCleanups.push(await renderGraph(container as HTMLElement, slug))
     }
+    initializeResizeHandles()
   }
 
   await renderLocalGraph()
