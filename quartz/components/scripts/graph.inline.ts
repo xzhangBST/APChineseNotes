@@ -193,7 +193,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     {} as Record<(typeof cssVars)[number], string>,
   )
 
-  // calculate color
+  // calculate color based on content length
   const color = (d: NodeData) => {
     const isCurrent = d.id === slug
     if (isCurrent) {
@@ -201,7 +201,16 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     } else if (visited.has(d.id) || d.id.startsWith("tags/")) {
       return computedStyleMap["--tertiary"]
     } else {
-      return computedStyleMap["--gray"]
+      // Get content length from the data map
+      const contentDetails = data.get(d.id)
+      const contentLength = contentDetails?.content?.length || 0
+      
+      // Use different colors based on content length
+      if (contentLength < 200) {
+        return "#ff6b6b" // Red for short content
+      } else {
+        return "#4ecdc4" // Teal for longer content
+      }
     }
   }
 
@@ -209,7 +218,8 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     const numLinks = graphData.links.filter(
       (l) => l.source.id === d.id || l.target.id === d.id,
     ).length
-    return 2 + Math.sqrt(numLinks)
+    // Make nodes bigger - increased base size and multiplier
+    return 4 + Math.sqrt(numLinks) * 1.5
   }
 
   let hoveredNodeId: string | null = null
