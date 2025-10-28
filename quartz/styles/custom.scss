@@ -46,6 +46,9 @@
 
 footer {
   background: var(--footer-bg);
-  padding: 2rem;
-  border-radius: 16px 16px 0 0;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
