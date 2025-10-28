@@ -44,14 +44,11 @@ def resolve_target_files(target_dir: Path, specific: str | None) -> list[Path]:
         return [p for p in target_dir.rglob("*.md") if p.is_file()]
 
     candidate = Path(specific)
+    target_dir = target_dir.resolve()
     if not candidate.is_absolute():
-        candidate = target_dir / candidate
-
-    try:
-        candidate = candidate.resolve()
-    except FileNotFoundError:
-        print(f"File not found: {specific}")
-        return []
+        candidate = (target_dir / candidate).resolve(strict=False)
+    else:
+        candidate = candidate.resolve(strict=False)
 
     try:
         candidate.relative_to(target_dir)
@@ -59,12 +56,12 @@ def resolve_target_files(target_dir: Path, specific: str | None) -> list[Path]:
         print(f"Specified file is outside the target directory: {candidate}")
         return []
 
-    if not candidate.is_file():
-        print(f"File not found: {candidate}")
-        return []
-
     if candidate.suffix.lower() != ".md":
         print(f"Not a Markdown file: {candidate}")
+        return []
+
+    if candidate.exists() and not candidate.is_file():
+        print(f"Not a regular file: {candidate}")
         return []
 
     return [candidate]
@@ -80,7 +77,7 @@ def main(target_dir: Path, source_dir: Path, dry_run: bool, specific_file: str |
         return
 
     for target_path in target_files:
-        if not target_path.is_file():
+        if target_path.exists() and not target_path.is_file():
             continue
 
         rel_path = target_path.relative_to(target_dir)
@@ -91,7 +88,7 @@ def main(target_dir: Path, source_dir: Path, dry_run: bool, specific_file: str |
 
         source_text = source_path.read_text(encoding="utf-8")
         filtered = filter_content(source_text)
-        current_text = target_path.read_text(encoding="utf-8")
+        current_text = target_path.read_text(encoding="utf-8") if target_path.is_file() else ""
 
         if filtered == current_text:
             continue
@@ -100,6 +97,7 @@ def main(target_dir: Path, source_dir: Path, dry_run: bool, specific_file: str |
             print(f"[dry-run] would update {target_path} from {source_path}")
             continue
 
+        target_path.parent.mkdir(parents=True, exist_ok=True)
         target_path.write_text(filtered, encoding="utf-8")
         print(f"Updated {target_path} from {source_path}")
         updated += 1
