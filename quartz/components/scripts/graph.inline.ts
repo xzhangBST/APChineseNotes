@@ -170,6 +170,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     height = Math.max(graph.offsetHeight, 250)
   })
 
+
   // we virtualize the simulation and use pixi to actually render it
   const simulation: Simulation<NodeData, LinkData> = forceSimulation<NodeData>(graphData.nodes)
     .force("charge", forceManyBody().strength(-100 * repelForce))
@@ -387,6 +388,24 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
     app.renderer.resize(width, height)
   })
 
+  // Add a MutationObserver to watch for style changes (CSS resize)
+  const mutationObserver = new MutationObserver(() => {
+    const newWidth = graph.offsetWidth
+    const newHeight = Math.max(graph.offsetHeight, 250)
+    if (newWidth !== width || newHeight !== height) {
+      width = newWidth
+      height = newHeight
+      app.renderer.resize(width, height)
+    }
+  })
+  
+  // Watch for changes to the graph container's style attribute
+  mutationObserver.observe(graph.parentElement!, {
+    attributes: true,
+    attributeFilter: ['style']
+  })
+
+
   const stage = app.stage
   stage.interactive = false
 
@@ -576,6 +595,7 @@ async function renderGraph(graph: HTMLElement, fullSlug: FullSlug) {
   requestAnimationFrame(animate)
   return () => {
     stopAnimation = true
+    mutationObserver.disconnect()
     app.destroy()
   }
 }
@@ -601,46 +621,17 @@ document.addEventListener("nav", async (e: CustomEventMap["nav"]) => {
   const slug = e.detail.url
   addToVisited(simplifySlug(slug))
 
-  // Add resize functionality
+  // Simplified resize functionality - rely mainly on CSS resize
   function initializeResizeHandles() {
+    // Just ensure the resize handles are visible, let CSS handle the actual resizing
     const resizeHandles = document.getElementsByClassName("resize-handle")
     for (const handle of resizeHandles) {
-      let isResizing = false
-      let startY = 0
-      let startHeight = 0
-
-      handle.addEventListener("mousedown", (e) => {
-        isResizing = true
-        startY = e.clientY
-        const graphOuter = handle.parentElement as HTMLElement
-        startHeight = graphOuter.offsetHeight
-        document.body.style.cursor = "ns-resize"
-        document.body.style.userSelect = "none"
+      // Add a simple click handler to make the handle more interactive
+      handle.addEventListener("click", (e) => {
         e.preventDefault()
-      })
-
-      document.addEventListener("mousemove", (e) => {
-        if (!isResizing) return
-        
-        const deltaY = e.clientY - startY
-        const newHeight = Math.max(150, Math.min(window.innerHeight * 0.8, startHeight + deltaY))
+        // Focus on the graph container to make it easier to resize
         const graphOuter = handle.parentElement as HTMLElement
-        graphOuter.style.height = `${newHeight}px`
-        
-        // Trigger graph re-render with new dimensions
-        const graphContainer = graphOuter.querySelector(".graph-container") as HTMLElement
-        if (graphContainer) {
-          // Dispatch a custom event to trigger graph resize
-          graphContainer.dispatchEvent(new CustomEvent("resize"))
-        }
-      })
-
-      document.addEventListener("mouseup", () => {
-        if (isResizing) {
-          isResizing = false
-          document.body.style.cursor = ""
-          document.body.style.userSelect = ""
-        }
+        graphOuter.focus()
       })
     }
   }

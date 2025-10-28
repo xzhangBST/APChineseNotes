@@ -11,27 +11,47 @@
     border: 1px solid var(--lightgray);
     box-sizing: border-box;
     height: 250px;
+    width: 100%;
     margin: 0.5em 0;
     position: relative;
     overflow: hidden;
-    resize: vertical;
+    resize: both;
     min-height: 150px;
+    min-width: 200px;
     max-height: 80vh;
+    max-width: 100%;
+    
+    // Add a subtle resize indicator
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 8px solid var(--lightgray);
+      opacity: 0.5;
+      cursor: ns-resize;
+    }
 
     & > .resize-handle {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
-      height: 8px;
+      height: 12px;
       background: linear-gradient(to right, transparent 0%, var(--lightgray) 20%, var(--lightgray) 80%, transparent 100%);
       cursor: ns-resize;
-      opacity: 0;
+      opacity: 0.3;
       transition: opacity 0.2s ease;
       z-index: 10;
+      border-radius: 0 0 5px 5px;
 
       &:hover {
         opacity: 1;
+        background: linear-gradient(to right, transparent 0%, var(--gray) 20%, var(--gray) 80%, transparent 100%);
       }
 
       &::after {
@@ -40,16 +60,16 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 20px;
-        height: 3px;
-        background: var(--gray);
+        width: 30px;
+        height: 4px;
+        background: var(--dark);
         border-radius: 2px;
         box-shadow: 0 1px 0 var(--lightgray);
       }
     }
 
     &:hover .resize-handle {
-      opacity: 0.7;
+      opacity: 0.8;
     }
 
     & > .global-graph-icon {
