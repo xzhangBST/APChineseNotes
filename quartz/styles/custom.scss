@@ -42,26 +42,6 @@
   background: var(--center-bg);
   border-radius: 16px;
   padding: 0 2.5rem 2rem 2.5rem;
-  position: relative;
-  overflow: hidden;
-}
-
-.center > article::before {
-  content: "";
-  position: absolute;
-  right: -0.5rem;
-  bottom: -0.75rem;
-  width: max(300px, 400%);
-  height: max(260px,400%);
-  background: url("/static/logo.png") center/contain no-repeat;
-  opacity: 0.1;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.center > article > * {
-  position: relative;
-  z-index: 1;
 }
 
 footer {
