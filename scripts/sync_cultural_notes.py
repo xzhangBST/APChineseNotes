@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+"""Sync Cultural Notes from an Obsidian vault into Quartz without copying tags or embeds."""
+from __future__ import annotations
+
+import argparse
+import re
+from pathlib import Path
+
+TAG_PATTERN = re.compile(r"(?<!\S)#(?!\s)[^\s#]+")
+EMBED_PATTERN = re.compile(r"!\[\[[^\]]+\]\]")
+
+
+def filter_content(raw: str) -> str:
+    """Strip Obsidian tags (#tag) and embeds (![[...]]) while leaving other text intact."""
+    filtered_lines = []
+    for line in raw.splitlines():
+        no_embeds = EMBED_PATTERN.sub("", line)
+        no_tags = TAG_PATTERN.sub("", no_embeds)
+        filtered_lines.append(no_tags)
+
+    trailing_newline = raw.endswith("\n")
+    result = "\n".join(filtered_lines)
+    if trailing_newline:
+        result += "\n"
+    return result
+
+
+def find_source(rel_path: Path, source_root: Path, target_root: Path) -> Path | None:
+    """Return the matching source path if it exists; try both direct and nested folders."""
+    direct = source_root / rel_path
+    if direct.is_file():
+        return direct
+
+    alternative = source_root / target_root.name / rel_path
+    if alternative.is_file():
+        return alternative
+
+    return None
+
+
+def main(target_dir: Path, source_dir: Path, dry_run: bool) -> None:
+    updated = 0
+    skipped = 0
+
+    for target_path in target_dir.rglob("*.md"):
+        if not target_path.is_file():
+            continue
+
+        rel_path = target_path.relative_to(target_dir)
+        source_path = find_source(rel_path, source_dir, target_dir)
+        if source_path is None:
+            skipped += 1
+            continue
+
+        source_text = source_path.read_text(encoding="utf-8")
+        filtered = filter_content(source_text)
+        current_text = target_path.read_text(encoding="utf-8")
+
+        if filtered == current_text:
+            continue
+
+        if dry_run:
+            print(f"[dry-run] would update {target_path} from {source_path}")
+            continue
+
+        target_path.write_text(filtered, encoding="utf-8")
+        print(f"Updated {target_path} from {source_path}")
+        updated += 1
+
+    print(f"Done. Updated {updated} file(s); skipped {skipped} without matches.")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description=(
+            "Sync matching Markdown files from an Obsidian vault into Quartz, "
+            "dropping #tags and ![[embeds]]."
+        )
+    )
+    parser.add_argument(
+        "--target-dir",
+        default=(
+            "/Users/xzhang/Documents/projects/obsidian/test-quartz/quartz/"
+            "content/Cultural Notes"
+        ),
+        type=Path,
+        help="Quartz directory to update (default: Cultural Notes folder).",
+    )
+    parser.add_argument(
+        "--source-dir",
+        default="/Users/xzhang/Documents/projects/obsidian/my-vault",
+        type=Path,
+        help="Obsidian vault root to read from.",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show which files would change without writing anything.",
+    )
+    args = parser.parse_args()
+
+    main(args.target_dir.resolve(), args.source_dir.resolve(), args.dry_run)
