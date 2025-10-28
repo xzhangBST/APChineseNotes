@@ -38,11 +38,48 @@ def find_source(rel_path: Path, source_root: Path, target_root: Path) -> Path | 
     return None
 
 
-def main(target_dir: Path, source_dir: Path, dry_run: bool) -> None:
+def resolve_target_files(target_dir: Path, specific: str | None) -> list[Path]:
+    """Return markdown files to sync, restricted to a specific file if provided."""
+    if specific is None:
+        return [p for p in target_dir.rglob("*.md") if p.is_file()]
+
+    candidate = Path(specific)
+    if not candidate.is_absolute():
+        candidate = target_dir / candidate
+
+    try:
+        candidate = candidate.resolve()
+    except FileNotFoundError:
+        print(f"File not found: {specific}")
+        return []
+
+    try:
+        candidate.relative_to(target_dir)
+    except ValueError:
+        print(f"Specified file is outside the target directory: {candidate}")
+        return []
+
+    if not candidate.is_file():
+        print(f"File not found: {candidate}")
+        return []
+
+    if candidate.suffix.lower() != ".md":
+        print(f"Not a Markdown file: {candidate}")
+        return []
+
+    return [candidate]
+
+
+def main(target_dir: Path, source_dir: Path, dry_run: bool, specific_file: str | None) -> None:
     updated = 0
     skipped = 0
 
-    for target_path in target_dir.rglob("*.md"):
+    target_files = resolve_target_files(target_dir, specific_file)
+    if not target_files:
+        print("No matching Markdown files to sync.")
+        return
+
+    for target_path in target_files:
         if not target_path.is_file():
             continue
 
@@ -97,6 +134,16 @@ if __name__ == "__main__":
         action="store_true",
         help="Show which files would change without writing anything.",
     )
+    parser.add_argument(
+        "file",
+        nargs="?",
+        help="Specific Markdown file (relative or absolute path) under the target directory to sync.",
+    )
     args = parser.parse_args()
 
-    main(args.target_dir.resolve(), args.source_dir.resolve(), args.dry_run)
+    main(
+        args.target_dir.resolve(),
+        args.source_dir.resolve(),
+        args.dry_run,
+        args.file,
+    )
