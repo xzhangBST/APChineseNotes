@@ -101,7 +101,7 @@ def main(target_dir: Path, source_dir: Path, dry_run: bool, specific_file: str |
 
         target_path.parent.mkdir(parents=True, exist_ok=True)
         target_path.write_text(filtered, encoding="utf-8")
-        print(f"Updated {target_path} from {source_path}")
+        print(f"Updated from {source_path}")
         updated += 1
 
     print(f"Done. Updated {updated} file(s); skipped {skipped} without matches.")
