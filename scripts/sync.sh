@@ -3,5 +3,5 @@ current_dir=$(pwd)
 echo "current_dir: ${current_dir}"
 
 
-python3 scripts/sync_cultural_notes.py ${note_name}.md
+python3 scripts/sync_cultural_notes.py # 
 npx quartz sync
