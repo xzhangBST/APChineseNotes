@@ -77,6 +77,7 @@ def main(target_dir: Path, source_dir: Path, dry_run: bool, specific_file: str |
         return
 
     for target_path in target_files:
+        print(f"Updating: {target_path}")
         if target_path.exists() and not target_path.is_file():
             continue
 
