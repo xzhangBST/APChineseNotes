@@ -1,5 +1,5 @@
 ---
-title: Welcome to CSA AP Chinese Classroom
+title: Welcome to Chinese School of Andover - AP Chinese Classroom
 ---
 
 Welcome to the AP Chinese Language and Culture course website.
