@@ -1,5 +1,5 @@
 ---
-title: Welcome to Chinese School of Andover - AP Chinese Classroom
+title: Welcome to our AP Chinese classroom!
 ---
 
 Welcome to the AP Chinese Language and Culture course website.
