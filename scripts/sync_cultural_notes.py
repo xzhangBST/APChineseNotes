@@ -84,6 +84,7 @@ def main(target_dir: Path, source_dir: Path, dry_run: bool, specific_file: str |
         rel_path = target_path.relative_to(target_dir)
         source_path = find_source(rel_path, source_dir, target_dir)
         if source_path is None:
+            print(f"Skipped: {target_path} (no source found)")
             skipped += 1
             continue
 
