@@ -1,5 +1,5 @@
 ---
-title: Welcome to our AP Chinese classroom!
+title: Welcome to Our AP Chinese Classroom!
 ---
 
 欢迎来到安多福中文学校（CSA）AP中文2025班的学习天地！
