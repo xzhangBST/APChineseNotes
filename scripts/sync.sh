@@ -1,2 +1,7 @@
-python3 scripts/sync_cultural_notes.py #"海上生明月，天涯共此时.md"
+note_name=$1
+current_dir=$(pwd)
+echo "current_dir: ${current_dir}"
+
+
+python3 sync_cultural_notes.py ${note_name}.md
 npx quartz sync
