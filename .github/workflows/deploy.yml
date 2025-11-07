@@ -26,6 +26,9 @@ jobs:
           node-version: 22
       - name: Install Dependencies
         run: npm ci
+      - name: Inject GA_ID
+        run: |
+          sed -i "s/{{GA_ID}}/${{ secrets.GA_MEASUREMENT_ID }}/g" quartz.config.ts
       - name: Build Quartz
         run: npx quartz build
       - name: Upload artifact
