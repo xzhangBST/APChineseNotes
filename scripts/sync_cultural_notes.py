@@ -117,7 +117,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--target-dir",
         default=(
-            "/Users/xzhang/Documents/projects/obsidian/test-quartz/quartz/"
+            "/Users/xzhang/Documents/projects/obsidian/my-page/quartz/"
             "content/Cultural Notes"
         ),
         type=Path,
